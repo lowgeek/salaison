@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fond -->
+  <rect width="100" height="100" fill="#8B4513" rx="15"/>
+  
+  <!-- Saucisson principal -->
+  <ellipse cx="50" cy="50" rx="28" ry="32" fill="#D2691E"/>
+  
+  <!-- Ombres pour donner du relief -->
+  <ellipse cx="50" cy="50" rx="28" ry="32" fill="#A0522D" opacity="0.3"/>
+  
+  <!-- Ficelle du haut -->
+  <rect x="47" y="15" width="6" height="8" fill="#8B7355" rx="1"/>
+  
+  <!-- Ficelles horizontales -->
+  <rect x="22" y="28" width="56" height="3" fill="#D2B48C" rx="1.5"/>
+  <rect x="22" y="42" width="56" height="3" fill="#D2B48C" rx="1.5"/>
+  <rect x="22" y="56" width="56" height="3" fill="#D2B48C" rx="1.5"/>
+  <rect x="22" y="70" width="56" height="3" fill="#D2B48C" rx="1.5"/>
+  
+  <!-- Détails gras (points blancs) -->
+  <circle cx="38" cy="35" r="2.5" fill="#FFF" opacity="0.7"/>
+  <circle cx="55" cy="38" r="2" fill="#FFF" opacity="0.7"/>
+  <circle cx="45" cy="48" r="2.5" fill="#FFF" opacity="0.6"/>
+  <circle cx="60" cy="52" r="2" fill="#FFF" opacity="0.7"/>
+  <circle cx="40" cy="60" r="2" fill="#FFF" opacity="0.6"/>
+  <circle cx="52" cy="65" r="2.5" fill="#FFF" opacity="0.7"/>
+  
+  <!-- Ombre portée en bas -->
+  <ellipse cx="50" cy="82" rx="25" ry="4" fill="#000" opacity="0.2"/>
+</svg>
