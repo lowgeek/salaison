@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Calculateur de Salaison</title>
     
     <!-- Favicons -->
@@ -26,15 +26,17 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow-x: hidden;
         }
 
         .container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
+            padding: 30px 20px;
             max-width: 500px;
             width: 100%;
+            box-sizing: border-box;
         }
 
         h1 {
@@ -59,18 +61,27 @@
         .weight-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .diameter-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 15px;
         }
 
         input[type="number"] {
             flex: 1;
-            padding: 15px;
+            min-width: 0;
+            padding: 12px 8px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 18px;
             text-align: center;
             transition: border-color 0.3s;
+            box-sizing: border-box;
         }
 
         input[type="number"]:focus {
@@ -79,7 +90,7 @@
         }
 
         .btn {
-            padding: 15px 20px;
+            padding: 12px 16px;
             background: #667eea;
             color: white;
             border: none;
@@ -88,6 +99,8 @@
             font-size: 18px;
             font-weight: 600;
             transition: background 0.3s, transform 0.1s;
+            flex-shrink: 0;
+            min-width: 44px;
         }
 
         .btn:hover {
@@ -261,6 +274,55 @@
             color: #888;
             font-size: 12px;
         }
+
+        /* Media queries pour mobile */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+
+            .btn {
+                padding: 10px 12px;
+                font-size: 16px;
+                min-width: 40px;
+            }
+
+            input[type="number"] {
+                padding: 10px 6px;
+                font-size: 16px;
+            }
+
+            .quick-buttons {
+                gap: 6px;
+            }
+
+            .quick-btn {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+
+            .results h2,
+            .drying-section h2 {
+                font-size: 18px;
+            }
+
+            .result-value {
+                font-size: 16px;
+            }
+
+            .drying-days-number {
+                font-size: 48px;
+            }
+
+            .drying-days-label {
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -272,7 +334,7 @@
             <div class="weight-controls">
                 <button class="btn" onclick="changeWeight(-100)">-</button>
                 <input type="number" id="weight" value="0" min="0" step="10" oninput="calculate()">
-                <span style="font-weight: bold;">g</span>
+                <span style="font-weight: bold; flex-shrink: 0;">g</span>
                 <button class="btn" onclick="changeWeight(100)">+</button>
             </div>
             <div class="quick-buttons">
@@ -319,7 +381,7 @@
                 <div class="diameter-controls">
                     <button class="btn" onclick="changeDiameter(-1)">-</button>
                     <input type="number" id="diameter" value="0" min="0" step="0.5" oninput="calculateDrying()">
-                    <span style="font-weight: bold;">cm</span>
+                    <span style="font-weight: bold; flex-shrink: 0;">cm</span>
                     <button class="btn" onclick="changeDiameter(1)">+</button>
                 </div>
                 <div class="quick-buttons">
@@ -337,6 +399,10 @@
                     <div class="drying-days-label">jours</div>
                 </div>
             </div>
+        </div>
+
+        <div class="footer">
+            Projet original : strene76
         </div>
     </div>
 
