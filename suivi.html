@@ -265,7 +265,7 @@
 
         <div class="info-box">
             <strong>ℹ️ Information</strong>
-            Le poids optimal correspond à une perte de 30% du poids initial (poids initial × 0.7)
+            Le poids optimal correspond à une perte de 40% du poids initial (poids initial × 0.6)
         </div>
 
         <div class="add-section">
@@ -309,6 +309,7 @@
                 id: Date.now(),
                 nom: nom,
                 poidsInitial: poidsInitial,
+                dateDebut: new Date().toLocaleDateString('fr-FR'),
                 pesees: []
             };
 
@@ -357,8 +358,8 @@
         }
 
         function calculerPoidsCible(poidsInitial) {
-            // Perte de 30% = on garde 70%
-            return Math.round(poidsInitial * 0.7);
+            // Perte de 40% = on garde 60%
+            return Math.round(poidsInitial * 0.6);
         }
 
         function calculerProgression(poidsInitial, poidsCurrent) {
@@ -417,13 +418,13 @@
                 }
 
                 html += `
-                            <th>Poids optimal (70%)</th>
+                            <th>Poids optimal (60%)</th>
                             <th>Progression</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>-</td>
+                            <td><small>${suivi.dateDebut || '-'}</small></td>
                             <td><strong>${suivi.poidsInitial} g</strong></td>
                 `;
 
