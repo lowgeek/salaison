@@ -267,7 +267,7 @@
         </div>
 
         <div class="input-section" style="margin-top: 20px;">
-            <label>⏱️ Temps de Séchage</label>
+            <label>⏱️ Temps de Salaison</label>
             <label style="font-weight: normal; font-size: 14px;">Diamètre de la viande</label>
             <div class="input-group">
                 <input type="number" id="diametre" value="5" min="0" step="0.1">
@@ -282,7 +282,7 @@
         </div>
 
         <div class="drying-time">
-            <h3>Durée de séchage recommandée</h3>
+            <h3>Durée de salaison recommandée</h3>
             <div class="drying-result" id="dureeResult">0 jours</div>
         </div>
     </div>
@@ -312,8 +312,8 @@
 
         function calculerDuree() {
             const diametre = parseFloat(document.getElementById('diametre').value) || 0;
-            // Formule approximative : 7 jours par cm de diamètre
-            const jours = Math.round(diametre * 7);
+            // Formule : 1cm = 1 jour + 1
+            const jours = Math.round(diametre + 1);
             document.getElementById('dureeResult').textContent = jours + ' jours';
         }
 
