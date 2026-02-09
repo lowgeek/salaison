@@ -442,11 +442,19 @@
             for (let i = 1; i < sheetsData.length; i++) {
                 const row = sheetsData[i];
                 if (row[0]) {
+                    // Convertir la date si c'est un objet Date
+                    let dateDebut = row[3] || '';
+                    if (dateDebut && typeof dateDebut === 'string' && dateDebut.includes('T')) {
+                        // Format ISO, convertir en date française
+                        const date = new Date(dateDebut);
+                        dateDebut = date.toLocaleDateString('fr-FR');
+                    }
+                    
                     suivis.push({
                         id: row[0],
                         nom: row[1] || '',
                         poidsInitial: parseFloat(row[2]) || 0,
-                        dateDebut: row[3] || '',
+                        dateDebut: dateDebut,
                         pesees: row[4] ? JSON.parse(row[4]) : []
                     });
                 }
