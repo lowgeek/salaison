@@ -40,10 +40,6 @@ Un calculateur simple et élégant pour déterminer les quantités exactes de se
 - CSS3 (avec design moderne et gradients)
 - JavaScript vanilla (sans dépendances)
 
-## 📝 Crédits
-
-Projet original créé par [strene76](https://github.com/strene76)
-
 ## 📄 Licence
 
 Libre d'utilisation et de modification pour vos besoins personnels.
