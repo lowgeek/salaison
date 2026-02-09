@@ -385,22 +385,43 @@
                         <li>Copiez l'URL de déploiement et collez-la ci-dessous</li>
                     </ol>
                     <p style="margin-top: 10px;"><strong>Code à copier dans Apps Script :</strong></p>
-                    <textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; padding: 10px; margin-top: 10px;">function doGet(e) {
+                    <textarea readonly style="width: 100%; height: 250px; font-family: monospace; font-size: 12px; padding: 10px; margin-top: 10px;">function doGet(e) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   const data = sheet.getDataRange().getValues();
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+  
+  // Support JSONP pour contourner CORS
+  const callback = e.parameter.callback;
+  const output = JSON.stringify(data);
+  
+  if (callback) {
+    return ContentService
+      .createTextOutput(callback + '(' + output + ')')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    return ContentService
+      .createTextOutput(output)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 function doPost(e) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const data = JSON.parse(e.postData.contents);
-  
-  sheet.clear();
-  if (data && data.length > 0) {
-    sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const data = JSON.parse(e.postData.contents);
+    
+    sheet.clear();
+    if (data && data.length > 0) {
+      sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+    }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({success: true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({success: false, error: error.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
   }
-  
-  return ContentService.createTextOutput(JSON.stringify({success: true})).setMimeType(ContentService.MimeType.JSON);
 }</textarea>
                 </div>
 
@@ -497,67 +518,65 @@ function doPost(e) {
 
             updateSyncStatus('syncing', 'Test en cours...');
             
-            try {
-                console.log('Test de connexion à:', sheetsUrl);
-                const response = await fetch(sheetsUrl);
-                console.log('Réponse reçue:', response);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Données reçues:', data);
-                    updateSyncStatus('connected', 'Connecté ✅');
-                    alert('✅ Connexion réussie !\n\nDonnées reçues: ' + JSON.stringify(data).substring(0, 100) + '...');
-                } else {
-                    updateSyncStatus('disconnected', 'Erreur de connexion');
-                    const errorText = await response.text();
-                    console.error('Erreur HTTP:', response.status, errorText);
-                    alert('❌ Erreur de connexion\n\nCode: ' + response.status + '\nDétails: ' + errorText.substring(0, 200));
-                }
-            } catch (error) {
-                updateSyncStatus('disconnected', 'Erreur');
-                console.error('Erreur complète:', error);
-                alert('❌ Erreur de connexion\n\n' + error.message + '\n\nVérifiez:\n1. L\'URL est correcte\n2. Le script est déployé en "Application Web"\n3. L\'accès est réglé sur "Tout le monde"');
-            }
+            // Tester en ouvrant l'URL dans un iframe invisible
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = sheetsUrl;
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                updateSyncStatus('connected', 'URL configurée ✅');
+                alert('✅ URL configurée !\n\nPour tester si ça fonctionne vraiment, cliquez sur "Charger depuis Sheets"');
+            }, 1000);
         }
 
-        async function syncNow() {
+        function syncNow() {
             if (!sheetsUrl) {
                 alert('Veuillez d\'abord configurer l\'URL');
                 return;
             }
 
-            updateSyncStatus('syncing', 'Synchronisation...');
+            updateSyncStatus('syncing', 'Chargement...');
             
-            try {
-                console.log('Chargement depuis:', sheetsUrl);
-                const response = await fetch(sheetsUrl);
-                console.log('Réponse:', response);
+            // Créer un callback unique
+            const callbackName = 'sheetsCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                console.log('Données reçues:', data);
                 
-                if (!response.ok) {
-                    throw new Error('Erreur HTTP ' + response.status);
+                try {
+                    if (data && data.length > 1) {
+                        suivis = convertSheetsToSuivis(data);
+                        console.log('Suivis convertis:', suivis);
+                        afficherTableau();
+                        updateSyncStatus('connected', 'Synchronisé ✅ (' + suivis.length + ' suivi(s))');
+                    } else {
+                        suivis = [];
+                        afficherTableau();
+                        updateSyncStatus('connected', 'Connecté (aucune donnée)');
+                    }
+                } catch (error) {
+                    console.error('Erreur de conversion:', error);
+                    updateSyncStatus('disconnected', 'Erreur de conversion');
                 }
                 
-                const data = await response.json();
-                console.log('Données brutes:', data);
-                
-                if (data && data.length > 1) {
-                    // Convertir les données Sheets en suivis
-                    suivis = convertSheetsToSuivis(data);
-                    console.log('Suivis convertis:', suivis);
-                    afficherTableau();
-                    updateSyncStatus('connected', 'Synchronisé ✅');
-                    alert('✅ Données chargées: ' + suivis.length + ' suivi(s)');
-                } else {
-                    suivis = [];
-                    afficherTableau();
-                    updateSyncStatus('connected', 'Connecté (aucune donnée)');
-                    alert('ℹ️ Aucune donnée trouvée. La feuille est vide.');
-                }
-            } catch (error) {
-                updateSyncStatus('disconnected', 'Erreur');
-                console.error('Erreur complète:', error);
-                alert('❌ Erreur de synchronisation\n\n' + error.message + '\n\nOuvrez la console (F12) pour plus de détails.');
-            }
+                // Nettoyer
+                delete window[callbackName];
+                document.head.removeChild(script);
+            };
+            
+            // Créer un script tag pour contourner CORS
+            const script = document.createElement('script');
+            script.src = sheetsUrl + '?callback=' + callbackName + '&t=' + Date.now();
+            script.onerror = function() {
+                updateSyncStatus('disconnected', 'Erreur de chargement');
+                alert('❌ Impossible de charger les données\n\nVérifiez que:\n1. Le script Apps Script est bien déployé\n2. L\'accès est sur "Tout le monde"\n3. Vous avez autorisé le script en l\'exécutant une fois');
+                delete window[callbackName];
+                document.head.removeChild(script);
+            };
+            
+            document.head.appendChild(script);
         }
 
         async function saveToSheets() {
