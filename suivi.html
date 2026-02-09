@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Suivi du Séchage</title>
+    <title>📊 Suivi du Séchage - Google Sheets</title>
     <style>
         * {
             margin: 0;
@@ -66,6 +66,70 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
+        .sync-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sync-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sync-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .sync-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .sync-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .sync-status.syncing {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .config-group {
+            margin: 15px 0;
+        }
+
+        .config-group label {
+            display: block;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 5px;
+        }
+
+        .config-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .config-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+        }
+
         .add-section {
             background: #f8f9fa;
             padding: 20px;
@@ -105,6 +169,7 @@
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -127,6 +192,12 @@
             transform: scale(1.05);
         }
 
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-danger {
             background: #dc3545;
             color: white;
@@ -144,6 +215,16 @@
 
         .btn-success:hover {
             background: #218838;
+            transform: scale(1.05);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
             transform: scale(1.05);
         }
 
@@ -191,14 +272,6 @@
             background: #f8f9fa;
         }
 
-        .weight-input {
-            width: 80px;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-align: center;
-        }
-
         .target-weight {
             font-weight: bold;
             color: #28a745;
@@ -232,13 +305,6 @@
             color: #999;
         }
 
-        .empty-state svg {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
         .info-box {
             background: #d1ecf1;
             border-left: 4px solid #0c5460;
@@ -252,6 +318,42 @@
             display: block;
             margin-bottom: 5px;
         }
+
+        .storage-mode {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .storage-mode button {
+            flex: 1;
+        }
+
+        .instruction-box {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .instruction-box h4 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .instruction-box ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .instruction-box code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #d63384;
+        }
     </style>
 </head>
 <body>
@@ -261,6 +363,59 @@
         <div class="nav-buttons">
             <button class="nav-button secondary" onclick="window.location.href='index.html'">🧂 Calculateur</button>
             <button class="nav-button primary">Suivi</button>
+        </div>
+
+        <div class="storage-mode">
+            <button class="btn-warning" onclick="switchToLocal()">💾 Mode Local</button>
+            <button class="btn-primary" onclick="showSheetsConfig()">☁️ Mode Google Sheets</button>
+        </div>
+
+        <div class="sync-section" id="syncSection">
+            <h3>
+                ☁️ Synchronisation Google Sheets
+                <span class="sync-status disconnected" id="syncStatus">Non configuré</span>
+            </h3>
+
+            <div id="configPanel">
+                <div class="instruction-box">
+                    <h4>📋 Configuration en 3 étapes :</h4>
+                    <ol>
+                        <li>Ouvrez <a href="https://script.google.com/home/start" target="_blank">Google Apps Script</a></li>
+                        <li>Créez un nouveau projet, collez le code ci-dessous et déployez-le comme "Application web"</li>
+                        <li>Copiez l'URL de déploiement et collez-la ci-dessous</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>Code à copier dans Apps Script :</strong></p>
+                    <textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; padding: 10px; margin-top: 10px;">function doGet(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data = sheet.getDataRange().getValues();
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data = JSON.parse(e.postData.contents);
+  
+  sheet.clear();
+  if (data && data.length > 0) {
+    sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({success: true})).setMimeType(ContentService.MimeType.JSON);
+}</textarea>
+                </div>
+
+                <div class="config-group">
+                    <label>URL de votre Google Apps Script :</label>
+                    <input type="text" id="sheetsUrl" placeholder="https://script.google.com/macros/s/...">
+                    <small>L'URL de déploiement de votre application web Apps Script</small>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-success" onclick="saveConfig()">💾 Sauvegarder la configuration</button>
+                    <button class="btn-primary" onclick="testConnection()">🔄 Tester la connexion</button>
+                    <button class="btn-warning" onclick="syncNow()">⬇️ Charger depuis Sheets</button>
+                </div>
+            </div>
         </div>
 
         <div class="info-box">
@@ -289,11 +444,227 @@
     </div>
 
     <script>
-        // Stockage des données dans localStorage
-        let suivis = JSON.parse(localStorage.getItem('suivisSechage')) || [];
+        let suivis = [];
+        let useGoogleSheets = false;
+        let sheetsUrl = '';
 
-        function sauvegarder() {
-            localStorage.setItem('suivisSechage', JSON.stringify(suivis));
+        // Charger la configuration
+        function loadConfig() {
+            const savedUrl = localStorage.getItem('sheetsUrl');
+            const savedMode = localStorage.getItem('storageMode');
+            
+            if (savedUrl) {
+                sheetsUrl = savedUrl;
+                document.getElementById('sheetsUrl').value = savedUrl;
+            }
+            
+            if (savedMode === 'sheets' && savedUrl) {
+                useGoogleSheets = true;
+                updateSyncStatus('connected', 'Connecté');
+                syncNow();
+            } else {
+                loadFromLocal();
+            }
+        }
+
+        function saveConfig() {
+            const url = document.getElementById('sheetsUrl').value.trim();
+            if (!url) {
+                alert('Veuillez entrer une URL valide');
+                return;
+            }
+            
+            sheetsUrl = url;
+            localStorage.setItem('sheetsUrl', url);
+            localStorage.setItem('storageMode', 'sheets');
+            useGoogleSheets = true;
+            
+            alert('✅ Configuration sauvegardée !');
+            testConnection();
+        }
+
+        function updateSyncStatus(type, text) {
+            const status = document.getElementById('syncStatus');
+            status.className = 'sync-status ' + type;
+            status.textContent = text;
+        }
+
+        async function testConnection() {
+            if (!sheetsUrl) {
+                alert('Veuillez d\'abord configurer l\'URL');
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Test en cours...');
+            
+            try {
+                console.log('Test de connexion à:', sheetsUrl);
+                const response = await fetch(sheetsUrl);
+                console.log('Réponse reçue:', response);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Données reçues:', data);
+                    updateSyncStatus('connected', 'Connecté ✅');
+                    alert('✅ Connexion réussie !\n\nDonnées reçues: ' + JSON.stringify(data).substring(0, 100) + '...');
+                } else {
+                    updateSyncStatus('disconnected', 'Erreur de connexion');
+                    const errorText = await response.text();
+                    console.error('Erreur HTTP:', response.status, errorText);
+                    alert('❌ Erreur de connexion\n\nCode: ' + response.status + '\nDétails: ' + errorText.substring(0, 200));
+                }
+            } catch (error) {
+                updateSyncStatus('disconnected', 'Erreur');
+                console.error('Erreur complète:', error);
+                alert('❌ Erreur de connexion\n\n' + error.message + '\n\nVérifiez:\n1. L\'URL est correcte\n2. Le script est déployé en "Application Web"\n3. L\'accès est réglé sur "Tout le monde"');
+            }
+        }
+
+        async function syncNow() {
+            if (!sheetsUrl) {
+                alert('Veuillez d\'abord configurer l\'URL');
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Synchronisation...');
+            
+            try {
+                console.log('Chargement depuis:', sheetsUrl);
+                const response = await fetch(sheetsUrl);
+                console.log('Réponse:', response);
+                
+                if (!response.ok) {
+                    throw new Error('Erreur HTTP ' + response.status);
+                }
+                
+                const data = await response.json();
+                console.log('Données brutes:', data);
+                
+                if (data && data.length > 1) {
+                    // Convertir les données Sheets en suivis
+                    suivis = convertSheetsToSuivis(data);
+                    console.log('Suivis convertis:', suivis);
+                    afficherTableau();
+                    updateSyncStatus('connected', 'Synchronisé ✅');
+                    alert('✅ Données chargées: ' + suivis.length + ' suivi(s)');
+                } else {
+                    suivis = [];
+                    afficherTableau();
+                    updateSyncStatus('connected', 'Connecté (aucune donnée)');
+                    alert('ℹ️ Aucune donnée trouvée. La feuille est vide.');
+                }
+            } catch (error) {
+                updateSyncStatus('disconnected', 'Erreur');
+                console.error('Erreur complète:', error);
+                alert('❌ Erreur de synchronisation\n\n' + error.message + '\n\nOuvrez la console (F12) pour plus de détails.');
+            }
+        }
+
+        async function saveToSheets() {
+            if (!useGoogleSheets || !sheetsUrl) {
+                return saveToLocal();
+            }
+
+            updateSyncStatus('syncing', 'Sauvegarde...');
+            
+            try {
+                const sheetsData = convertSuivisToSheets(suivis);
+                
+                const response = await fetch(sheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(sheetsData)
+                });
+
+                updateSyncStatus('connected', 'Synchronisé ✅');
+                return true;
+            } catch (error) {
+                console.error('Erreur de sauvegarde:', error);
+                updateSyncStatus('disconnected', 'Erreur de sauvegarde');
+                // Fallback vers localStorage
+                return saveToLocal();
+            }
+        }
+
+        function convertSuivisToSheets(suivis) {
+            const rows = [['ID', 'Nom', 'Poids Initial', 'Date Début', 'Pesées (JSON)']];
+            
+            suivis.forEach(suivi => {
+                rows.push([
+                    suivi.id,
+                    suivi.nom,
+                    suivi.poidsInitial,
+                    suivi.dateDebut,
+                    JSON.stringify(suivi.pesees)
+                ]);
+            });
+            
+            return rows;
+        }
+
+        function convertSheetsToSuivis(sheetsData) {
+            if (!sheetsData || sheetsData.length < 2) return [];
+            
+            const suivis = [];
+            for (let i = 1; i < sheetsData.length; i++) {
+                const row = sheetsData[i];
+                if (row[0]) { // Si l'ID existe
+                    suivis.push({
+                        id: row[0],
+                        nom: row[1] || '',
+                        poidsInitial: parseFloat(row[2]) || 0,
+                        dateDebut: row[3] || '',
+                        pesees: row[4] ? JSON.parse(row[4]) : []
+                    });
+                }
+            }
+            
+            return suivis;
+        }
+
+        function switchToLocal() {
+            useGoogleSheets = false;
+            localStorage.setItem('storageMode', 'local');
+            updateSyncStatus('disconnected', 'Mode local');
+            loadFromLocal();
+            alert('✅ Passage en mode local. Vos données sont stockées sur cet appareil uniquement.');
+        }
+
+        function showSheetsConfig() {
+            if (!sheetsUrl) {
+                alert('Veuillez configurer l\'URL de votre Google Apps Script dans la section jaune ci-dessus.');
+            } else {
+                useGoogleSheets = true;
+                localStorage.setItem('storageMode', 'sheets');
+                syncNow();
+            }
+        }
+
+        function saveToLocal() {
+            try {
+                localStorage.setItem('suivisSechage', JSON.stringify(suivis));
+                return true;
+            } catch (e) {
+                console.error('Erreur localStorage:', e);
+                return false;
+            }
+        }
+
+        function loadFromLocal() {
+            suivis = JSON.parse(localStorage.getItem('suivisSechage')) || [];
+            suivis = suivis.map(suivi => {
+                if (!suivi.dateDebut) {
+                    suivi.dateDebut = new Date().toLocaleDateString('fr-FR');
+                }
+                return suivi;
+            });
+            if (suivis.length > 0) {
+                localStorage.setItem('suivisSechage', JSON.stringify(suivis));
+            }
+            afficherTableau();
         }
 
         function ajouterSuivi() {
@@ -314,19 +685,26 @@
             };
 
             suivis.push(nouveauSuivi);
-            sauvegarder();
             
-            // Réinitialiser le formulaire
+            if (useGoogleSheets) {
+                saveToSheets();
+            } else {
+                saveToLocal();
+            }
+            
             document.getElementById('nomProduit').value = '';
             document.getElementById('poidsInitial').value = '';
-            
             afficherTableau();
         }
 
         function supprimerSuivi(id) {
             if (confirm('Êtes-vous sûr de vouloir supprimer ce suivi ?')) {
                 suivis = suivis.filter(s => s.id !== id);
-                sauvegarder();
+                if (useGoogleSheets) {
+                    saveToSheets();
+                } else {
+                    saveToLocal();
+                }
                 afficherTableau();
             }
         }
@@ -343,7 +721,11 @@
             const suivi = suivis.find(s => s.id === id);
             if (suivi) {
                 suivi.pesees.push({ date, poids });
-                sauvegarder();
+                if (useGoogleSheets) {
+                    saveToSheets();
+                } else {
+                    saveToLocal();
+                }
                 afficherTableau();
             }
         }
@@ -352,13 +734,16 @@
             const suivi = suivis.find(s => s.id === suiviId);
             if (suivi) {
                 suivi.pesees.splice(peseeIndex, 1);
-                sauvegarder();
+                if (useGoogleSheets) {
+                    saveToSheets();
+                } else {
+                    saveToLocal();
+                }
                 afficherTableau();
             }
         }
 
         function calculerPoidsCible(poidsInitial) {
-            // Perte de 40% = on garde 60%
             return Math.round(poidsInitial * 0.6);
         }
 
@@ -376,7 +761,7 @@
             if (suivis.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 64px; height: 64px; margin-bottom: 20px; opacity: 0.5;">
                             <path d="M9 11l3 3L22 4"></path>
                             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
                         </svg>
@@ -412,7 +797,6 @@
                             <th>Poids initial</th>
                 `;
 
-                // Colonnes pour chaque pesée
                 for (let i = 0; i < suivi.pesees.length; i++) {
                     html += `<th>Pesée ${i + 1}</th>`;
                 }
@@ -428,7 +812,6 @@
                             <td><strong>${suivi.poidsInitial} g</strong></td>
                 `;
 
-                // Données de chaque pesée
                 suivi.pesees.forEach((pesee, index) => {
                     html += `
                         <td>
@@ -458,7 +841,7 @@
         }
 
         // Initialisation
-        afficherTableau();
+        loadConfig();
     </script>
 </body>
 </html>
