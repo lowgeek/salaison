@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Suivi du Séchage</title>
+    <title>📊 Suivi du Séchage - GitHub Sync</title>
     <style>
         * {
             margin: 0;
@@ -66,6 +66,70 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
+        .sync-section {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sync-section h3 {
+            color: #1976D2;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sync-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .sync-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .sync-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .sync-status.syncing {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .config-group {
+            margin: 15px 0;
+        }
+
+        .config-group label {
+            display: block;
+            font-weight: 600;
+            color: #1976D2;
+            margin-bottom: 5px;
+        }
+
+        .config-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .config-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+        }
+
         .add-section {
             background: #f8f9fa;
             padding: 20px;
@@ -105,6 +169,7 @@
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -127,6 +192,12 @@
             transform: scale(1.05);
         }
 
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-danger {
             background: #dc3545;
             color: white;
@@ -144,6 +215,16 @@
 
         .btn-success:hover {
             background: #218838;
+            transform: scale(1.05);
+        }
+
+        .btn-info {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #1976D2;
             transform: scale(1.05);
         }
 
@@ -191,14 +272,6 @@
             background: #f8f9fa;
         }
 
-        .weight-input {
-            width: 80px;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-align: center;
-        }
-
         .target-weight {
             font-weight: bold;
             color: #28a745;
@@ -232,13 +305,6 @@
             color: #999;
         }
 
-        .empty-state svg {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
         .info-box {
             background: #d1ecf1;
             border-left: 4px solid #0c5460;
@@ -252,6 +318,33 @@
             display: block;
             margin-bottom: 5px;
         }
+
+        .instruction-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instruction-box code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #d63384;
+        }
+
+        .instruction-box ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .instruction-box li {
+            margin: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -261,6 +354,35 @@
         <div class="nav-buttons">
             <button class="nav-button secondary" onclick="window.location.href='index.html'">🧂 Calculateur</button>
             <button class="nav-button primary">Suivi</button>
+        </div>
+
+        <div class="sync-section" id="syncSection">
+            <h3>
+                🔄 Synchronisation GitHub
+                <span class="sync-status disconnected" id="syncStatus">Non configuré</span>
+            </h3>
+
+            <div class="instruction-box">
+                <strong>📋 Configuration rapide :</strong>
+                <ol>
+                    <li>Dans votre repo GitHub <code>lowgeek/salaison</code>, créez un fichier <code>data.json</code> avec ce contenu : <code>[]</code></li>
+                    <li>Collez ce lien ci-dessous : <code>https://lowgeek.github.io/salaison/data.json</code></li>
+                    <li>Cliquez sur "Sauvegarder" puis "Charger"</li>
+                </ol>
+                <small><strong>Note :</strong> Les sauvegardes nécessitent un commit GitHub (à faire manuellement pour l'instant)</small>
+            </div>
+
+            <div class="config-group">
+                <label>URL du fichier data.json :</label>
+                <input type="text" id="githubUrl" placeholder="https://lowgeek.github.io/salaison/data.json" value="https://lowgeek.github.io/salaison/data.json">
+                <small>URL publique de votre fichier data.json sur GitHub Pages</small>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-success" onclick="saveConfig()">💾 Sauvegarder la config</button>
+                <button class="btn-info" onclick="syncFromGitHub()">⬇️ Charger depuis GitHub</button>
+                <button class="btn-primary" onclick="exportToJSON()">📥 Exporter (pour commit manuel)</button>
+            </div>
         </div>
 
         <div class="info-box">
@@ -289,11 +411,118 @@
     </div>
 
     <script>
-        // Stockage des données dans localStorage
-        let suivis = JSON.parse(localStorage.getItem('suivisSechage')) || [];
+        let suivis = [];
+        let githubUrl = 'https://lowgeek.github.io/salaison/data.json';
 
-        function sauvegarder() {
-            localStorage.setItem('suivisSechage', JSON.stringify(suivis));
+        // Charger la configuration
+        function loadConfig() {
+            const savedUrl = localStorage.getItem('githubUrl');
+            if (savedUrl) {
+                githubUrl = savedUrl;
+                document.getElementById('githubUrl').value = savedUrl;
+            }
+            
+            // Charger automatiquement depuis GitHub
+            syncFromGitHub();
+        }
+
+        function saveConfig() {
+            const url = document.getElementById('githubUrl').value.trim();
+            if (!url) {
+                alert('Veuillez entrer une URL valide');
+                return;
+            }
+            
+            githubUrl = url;
+            localStorage.setItem('githubUrl', url);
+            alert('✅ Configuration sauvegardée !');
+            updateSyncStatus('disconnected', 'Configuré - Cliquez sur Charger');
+        }
+
+        function updateSyncStatus(type, text) {
+            const status = document.getElementById('syncStatus');
+            status.className = 'sync-status ' + type;
+            status.textContent = text;
+        }
+
+        async function syncFromGitHub() {
+            if (!githubUrl) {
+                alert('Veuillez d\'abord configurer l\'URL');
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Chargement...');
+            
+            try {
+                // Ajouter un paramètre pour éviter le cache
+                const url = githubUrl + '?t=' + Date.now();
+                console.log('Chargement depuis:', url);
+                
+                const response = await fetch(url, {
+                    cache: 'no-cache'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Fichier non trouvé (code ' + response.status + ')');
+                }
+                
+                const data = await response.json();
+                console.log('Données chargées:', data);
+                
+                if (Array.isArray(data)) {
+                    suivis = data;
+                    afficherTableau();
+                    updateSyncStatus('connected', 'Synchronisé ✅ (' + suivis.length + ' suivi(s))');
+                } else {
+                    throw new Error('Format de données invalide');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                updateSyncStatus('disconnected', 'Erreur');
+                alert('❌ Erreur de chargement\n\n' + error.message + '\n\nVérifiez que le fichier data.json existe dans votre repo et contient: []');
+                
+                // Charger depuis localStorage en fallback
+                loadFromLocal();
+            }
+        }
+
+        function exportToJSON() {
+            // Créer le fichier JSON
+            const dataStr = JSON.stringify(suivis, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            // Créer un lien de téléchargement
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'data.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('📥 Fichier data.json téléchargé !\n\nPour synchroniser :\n1. Allez sur github.com/lowgeek/salaison\n2. Remplacez le fichier data.json par celui téléchargé\n3. Commit les changements\n4. Cliquez sur "Charger" pour voir les données sur vos autres appareils');
+        }
+
+        function loadFromLocal() {
+            suivis = JSON.parse(localStorage.getItem('suivisSechage')) || [];
+            suivis = suivis.map(suivi => {
+                if (!suivi.dateDebut) {
+                    suivi.dateDebut = new Date().toLocaleDateString('fr-FR');
+                }
+                return suivi;
+            });
+            afficherTableau();
+        }
+
+        function saveToLocal() {
+            try {
+                localStorage.setItem('suivisSechage', JSON.stringify(suivis));
+                return true;
+            } catch (e) {
+                console.error('Erreur localStorage:', e);
+                return false;
+            }
         }
 
         function ajouterSuivi() {
@@ -314,19 +543,19 @@
             };
 
             suivis.push(nouveauSuivi);
-            sauvegarder();
+            saveToLocal();
             
-            // Réinitialiser le formulaire
             document.getElementById('nomProduit').value = '';
             document.getElementById('poidsInitial').value = '';
-            
             afficherTableau();
+            
+            alert('✅ Suivi ajouté !\n\nN\'oubliez pas de cliquer sur "Exporter" pour sauvegarder sur GitHub.');
         }
 
         function supprimerSuivi(id) {
             if (confirm('Êtes-vous sûr de vouloir supprimer ce suivi ?')) {
                 suivis = suivis.filter(s => s.id !== id);
-                sauvegarder();
+                saveToLocal();
                 afficherTableau();
             }
         }
@@ -343,8 +572,9 @@
             const suivi = suivis.find(s => s.id === id);
             if (suivi) {
                 suivi.pesees.push({ date, poids });
-                sauvegarder();
+                saveToLocal();
                 afficherTableau();
+                alert('✅ Pesée ajoutée !\n\nN\'oubliez pas de cliquer sur "Exporter" pour sauvegarder sur GitHub.');
             }
         }
 
@@ -352,13 +582,12 @@
             const suivi = suivis.find(s => s.id === suiviId);
             if (suivi) {
                 suivi.pesees.splice(peseeIndex, 1);
-                sauvegarder();
+                saveToLocal();
                 afficherTableau();
             }
         }
 
         function calculerPoidsCible(poidsInitial) {
-            // Perte de 40% = on garde 60%
             return Math.round(poidsInitial * 0.6);
         }
 
@@ -376,7 +605,7 @@
             if (suivis.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 64px; height: 64px; margin-bottom: 20px; opacity: 0.5;">
                             <path d="M9 11l3 3L22 4"></path>
                             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
                         </svg>
@@ -412,7 +641,6 @@
                             <th>Poids initial</th>
                 `;
 
-                // Colonnes pour chaque pesée
                 for (let i = 0; i < suivi.pesees.length; i++) {
                     html += `<th>Pesée ${i + 1}</th>`;
                 }
@@ -428,7 +656,6 @@
                             <td><strong>${suivi.poidsInitial} g</strong></td>
                 `;
 
-                // Données de chaque pesée
                 suivi.pesees.forEach((pesee, index) => {
                     html += `
                         <td>
@@ -458,7 +685,7 @@
         }
 
         // Initialisation
-        afficherTableau();
+        loadConfig();
     </script>
 </body>
 </html>
