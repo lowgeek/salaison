@@ -572,7 +572,6 @@
                             </th>
                         </tr>
                         <tr>
-                            <th>Date</th>
                             <th>Poids initial</th>
                 `;
 
@@ -587,8 +586,10 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><small>${suivi.dateDebut || '-'}</small></td>
-                            <td><strong>${suivi.poidsInitial} g</strong></td>
+                            <td>
+                                <div style="margin-bottom: 5px;"><small>${suivi.dateDebut || '-'}</small></div>
+                                <strong>${suivi.poidsInitial} g</strong>
+                            </td>
                 `;
 
                 suivi.pesees.forEach((pesee, index) => {
