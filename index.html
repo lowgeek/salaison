@@ -209,9 +209,22 @@
 
         .drying-result {
             text-align: center;
-            font-size: 32px;
+            font-size: 22px;
             font-weight: bold;
             color: #856404;
+        }
+
+        .end-date {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #856404;
+            opacity: 0.85;
+        }
+
+        .end-date span {
+            font-weight: bold;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -284,6 +297,7 @@
         <div class="drying-time">
             <h3>Durée de salaison recommandée</h3>
             <div class="drying-result" id="dureeResult">0 jours</div>
+            <div class="end-date" id="endDateResult"></div>
         </div>
     </div>
 
@@ -315,6 +329,21 @@
             // Formule : 1cm = 1 jour + 1, mais si diamètre = 0 alors 0 jours
             const jours = diametre === 0 ? 0 : Math.round(diametre + 1);
             document.getElementById('dureeResult').textContent = jours + ' jours';
+
+            // Calcul de la date de fin
+            const endDateEl = document.getElementById('endDateResult');
+            if (jours === 0) {
+                endDateEl.innerHTML = '';
+            } else {
+                const today = new Date();
+                const endDate = new Date(today);
+                endDate.setDate(today.getDate() + jours);
+
+                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                const dateStr = endDate.toLocaleDateString('fr-FR', options);
+
+                endDateEl.innerHTML = '📅 Prêt le <span>' + dateStr + '</span>';
+            }
         }
 
         // Event listeners
